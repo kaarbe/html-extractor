@@ -1,7 +1,6 @@
 package com.bednarski;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class Extractor {
 
@@ -57,53 +56,83 @@ public class Extractor {
   }
 
   public String extractTwo(String input) {
-    Queue<Character> inputChars = new LinkedList<>();
+    List<Character> inputChars = new ArrayList<>();
     for (char c : input.toCharArray()) {
-      inputChars.add(c);
+       inputChars.add(c);
+    }
+    // find opening mark and save it
+    int i = 0;
+    while (!Character.valueOf('<').equals(inputChars.get(i))) {
+      i++;
     }
 
-    List<Character> validChars = new ArrayList<>();
-    while (!inputChars.isEmpty()) {
-      while ('<' != inputChars.element()) {
-        inputChars.remove();
-      }
-
-      // skip '<'
-      inputChars.remove();
-
-      StringBuilder currentOpeningMark = new StringBuilder();
-      while ('>' != inputChars.element()) {
-        currentOpeningMark.append(inputChars.remove());
-      }
-
-      // skip '>'
-      inputChars.remove();
-
-      List<Character> possiblyValidChars = new ArrayList<>();
-      Character first = inputChars.remove();
-      Character second = inputChars.remove();
-      while ('<' != first && '/' != second) {
-        possiblyValidChars.add(first);
-        first = second;
-        second = inputChars.remove();
-      }
-      //  f s 0 0 0 0
-      //  g < / h 1 >
-
-      StringBuilder currentClosingMark = new StringBuilder();
-      while ('>' != inputChars.element()) {
-        currentClosingMark.append(inputChars.remove());
-      }
-      // skip '>'
-      inputChars.remove();
-
-      if (currentOpeningMark.compareTo(currentClosingMark) == 0) {
-        validChars.addAll(possiblyValidChars);
-      }
+    // trim chars before the first html opening mark
+    if (i > 0) {
+      inputChars = inputChars.subList(i, inputChars.size());
+      i = 0;
     }
-    return validChars
-        .stream()
-        .map(Object::toString)
-        .collect(Collectors.joining());
+
+    // initial first mark
+    HtmlMark firstMark = HtmlMark.withStartIndex(i);
+    while (!Character.valueOf('>').equals(inputChars.get(i))) {
+      firstMark.append(inputChars.get(i++));
+    }
+    firstMark.append(inputChars.get(i));
+    firstMark.setEndIndex(i);
+
+    // skip content in-between two marks (for now)
+    while (!Character.valueOf('<').equals(inputChars.get(i))) {
+      i++;
+    }
+
+    // initial second mark
+    HtmlMark secondMark = HtmlMark.withStartIndex(i);
+    while (!Character.valueOf('>').equals(inputChars.get(i))) {
+      secondMark.append(inputChars.get(i++));
+    }
+    secondMark.append(inputChars.get(i));
+    secondMark.setEndIndex(i);
+
+    // while first isn't opening and second isn't closing, keep looking
+    while (!(firstMark.isOpening() && secondMark.isClosing())) {
+      // move first 'pointer' to the second 'pointer'
+      firstMark = secondMark;
+
+      // skip content in-between two marks (for now)
+      while (!Character.valueOf('<').equals(inputChars.get(i))) {
+        i++;
+      }
+
+      // set second 'pointer' on new html mark
+      secondMark = HtmlMark.withStartIndex(i);
+      while (!Character.valueOf('>').equals(inputChars.get(i))) {
+        secondMark.append(inputChars.get(i++));
+      }
+      secondMark.append(inputChars.get(i));
+      secondMark.setEndIndex(i);
+    }
+
+    if (firstMark.isPairWith(secondMark)) {
+      inputChars = getCharsWithoutHtmlMarksFound(inputChars, firstMark, secondMark);
+    } else {
+      // remove marks and content
+      inputChars.subList(firstMark.getStartIndex(), secondMark.getEndIndex() + 1).clear();
+    }
+
+    return "";
+  }
+
+  private List<Character> getCharsWithoutHtmlMarksFound(
+      List<Character> inputChars, HtmlMark openingMark, HtmlMark closingMark) {
+    // remove marks
+    List<Character> beforeOpeningMark = inputChars.subList(0, openingMark.getStartIndex());
+    List<Character> inBetweenMarks = inputChars.subList(openingMark.getEndIndex() + 1, closingMark.getStartIndex());
+    List<Character> afterClosingMark = inputChars.subList(closingMark.getEndIndex() + 1, inputChars.size());
+    List<Character> inputCharsWithoutMarksFound =
+        new ArrayList<>(beforeOpeningMark.size() + inBetweenMarks.size() + afterClosingMark.size());
+    inputCharsWithoutMarksFound.addAll(beforeOpeningMark);
+    inputCharsWithoutMarksFound.addAll(inBetweenMarks);
+    inputCharsWithoutMarksFound.addAll(afterClosingMark);
+    return inputCharsWithoutMarksFound;
   }
 }

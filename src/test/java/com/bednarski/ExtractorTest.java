@@ -17,7 +17,7 @@ class ExtractorTest {
   void shouldExtractFromHtmlWithoutNesting() {
     // given
     var htmlInput =
-        "<h1>Dog</h1>" +
+        "hej</h1><h1>Dog</h1>" +
         "<h1>Cat</h1>" +
         "<h1>Fish</H1>";
     var correctlyExtractedText = "DogCat";
