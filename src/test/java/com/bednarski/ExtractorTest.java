@@ -23,7 +23,7 @@ class ExtractorTest {
     var correctlyExtractedText = "DogCat";
 
     // when
-    String result = extractor.extractTwo(htmlInput);
+    String result = extractor.extractPlainText(htmlInput);
 
     // then
     assertEquals(correctlyExtractedText, result);
@@ -42,7 +42,7 @@ class ExtractorTest {
     var correctlyExtractedText = "DogAnotherDogCat";
 
     // when
-    String result = extractor.extractTwo(htmlInput);
+    String result = extractor.extractPlainText(htmlInput);
 
     // then
     assertEquals(correctlyExtractedText, result);
