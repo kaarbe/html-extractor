@@ -5,37 +5,20 @@ import java.util.stream.Collectors;
 
 public class Extractor {
 
-  public String extractPlainText(String input) {
+  public String extractPlainText(String input, boolean shouldTrim) {
     List<Character> inputChars = toCharList(input);
-    boolean isFirstRun = true;
-//    trimBeginning(inputChars);
-//    trimEnding(inputChars);
-    while (inputChars.contains('<') && inputChars.contains('>') && inputChars.contains('/')) {
-      // find opening mark and save it
+    if (shouldTrim) {
+      trimBeginning(inputChars);
+      trimEnding(inputChars);
+    }
+    while (containsHtmlMarks(inputChars)) {
+      // find mark opening char
       int i = 0;
       while (!Character.valueOf('<').equals(inputChars.get(i))) {
         i++;
       }
 
-      // trim chars before the first html opening mark
-      if (isFirstRun && i > 0) {
-        if (Character.valueOf('/').equals(inputChars.get(i + 1))) {
-          int j = i + 1;
-          while (!Character.valueOf('>').equals(inputChars.get(j))) {
-            j++;
-          }
-          inputChars = inputChars.subList(++j, inputChars.size());
-        } else {
-          inputChars = inputChars.subList(i, inputChars.size());
-        }
-        i = 0;
-      }
-
-      if (isFirstRun) {
-        isFirstRun = false;
-      }
-
-      // initial first mark
+      // save initial first mark
       HtmlMark firstMark = HtmlMark.withStartIndex(i);
       while (!Character.valueOf('>').equals(inputChars.get(i))) {
         firstMark.append(inputChars.get(i++));
@@ -76,7 +59,7 @@ public class Extractor {
       }
 
       if (firstMark.isPairWith(secondMark)) {
-        inputChars = getCharsWithoutHtmlMarksFound(inputChars, firstMark, secondMark);
+        inputChars = getWithoutHtmlMarksFound(inputChars, firstMark, secondMark);
       } else {
         // remove marks and content
         inputChars
@@ -91,21 +74,48 @@ public class Extractor {
         .collect(Collectors.joining(""));
   }
 
+  private static boolean containsHtmlMarks(List<Character> inputChars) {
+    return inputChars.contains('<')
+        && inputChars.contains('>')
+        && inputChars.contains('/');
+  }
+
   private void trimBeginning(List<Character> chars) {
+    if (Character.valueOf('<').equals(chars.get(0))) {
+      return;
+    }
     int i = 0;
+    int j = 0;
     while (i < chars.size() && !Character.valueOf('<').equals(chars.get(i))) {
       i++;
+      if (Character.valueOf('/').equals(chars.get(i + 1))) {
+        j = i + 1;
+        while (!Character.valueOf('>').equals(chars.get(j))) {
+          j++;
+        }
+      }
     }
-    chars.subList(0, i).clear();
+    chars.subList(0, Math.max(i, ++j)).clear();
   }
 
 
   private void trimEnding(List<Character> chars) {
+    if (Character.valueOf('>').equals(chars.get(chars.size() - 1))) {
+      return;
+    }
     int i = chars.size() - 1;
     while (i >= 0 && !Character.valueOf('>').equals(chars.get(i))) {
       i--;
     }
-    chars.subList(i + 1, chars.size()).clear();
+    int j = i;
+    while (j >= 0 && !Character.valueOf('<').equals(chars.get(j))) {
+      j--;
+    }
+    if (!Character.valueOf('/').equals(chars.get(j + 1))) {
+      chars.subList(j, chars.size()).clear();
+    } else {
+      chars.subList(i + 1, chars.size()).clear();
+    }
   }
 
   private List<Character> toCharList(String text) {
@@ -116,7 +126,7 @@ public class Extractor {
     return chars;
   }
 
-  private List<Character> getCharsWithoutHtmlMarksFound(List<Character> chars, HtmlMark opening, HtmlMark closing) {
+  private List<Character> getWithoutHtmlMarksFound(List<Character> chars, HtmlMark opening, HtmlMark closing) {
     List<Character> beforeOpeningMark = chars.subList(0, opening.getStartIndex());
     List<Character> inBetweenMarks = chars.subList(opening.getEndIndex() + 1, closing.getStartIndex());
     List<Character> afterClosingMark = chars.subList(closing.getEndIndex() + 1, chars.size());

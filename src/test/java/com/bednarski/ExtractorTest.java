@@ -19,11 +19,11 @@ class ExtractorTest {
     var htmlInput =
         "hej</h1><h1>Dog</h1>" +
         "<h1>Cat</h1>" +
-        "<h1>Fish</H1>";
+        "<h1>Fish</H1><h1>hej";
     var correctlyExtractedText = "DogCat";
 
     // when
-    String result = extractor.extractPlainText(htmlInput);
+    String result = extractor.extractPlainText(htmlInput, true);
 
     // then
     assertEquals(correctlyExtractedText, result);
@@ -42,7 +42,7 @@ class ExtractorTest {
     var correctlyExtractedText = "DogAnotherDogCat";
 
     // when
-    String result = extractor.extractPlainText(htmlInput);
+    String result = extractor.extractPlainText(htmlInput, true);
 
     // then
     assertEquals(correctlyExtractedText, result);
