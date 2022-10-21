@@ -2,13 +2,9 @@ package com.bednarski;
 
 public class HtmlMark {
 
-  private int startIndex;
+  private final StringBuilder content;
+  private final int startIndex;
   private int endIndex;
-  private StringBuilder content;
-
-  public HtmlMark() {
-    this.content = new StringBuilder();
-  }
 
   private HtmlMark(int startIndex) {
     this.startIndex = startIndex;
@@ -37,17 +33,19 @@ public class HtmlMark {
     if (!(this.isOpening() && other.isClosing())) {
       return false;
     }
-    String content = this.content.toString().replace("<", "").replace(">", "");
-    String otherContent = other.content.toString().replace("</", "").replace(">", "");
+    String content = this.content
+        .toString()
+        .replace("<", "")
+        .replace(">", "");
+    String otherContent = other.content
+        .toString()
+        .replace("</", "")
+        .replace(">", "");
     return content.equals(otherContent);
   }
 
   public int getStartIndex() {
     return startIndex;
-  }
-
-  public void setStartIndex(int startIndex) {
-    this.startIndex = startIndex;
   }
 
   public int getEndIndex() {
@@ -56,13 +54,5 @@ public class HtmlMark {
 
   public void setEndIndex(int endIndex) {
     this.endIndex = endIndex;
-  }
-
-  public StringBuilder getContent() {
-    return content;
-  }
-
-  public void setContent(StringBuilder content) {
-    this.content = content;
   }
 }

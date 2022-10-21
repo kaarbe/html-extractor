@@ -6,11 +6,10 @@ import java.util.stream.Collectors;
 public class Extractor {
 
   public String extractPlainText(String input) {
-    List<Character> inputChars = new ArrayList<>();
-    for (char c : input.toCharArray()) {
-       inputChars.add(c);
-    }
+    List<Character> inputChars = toCharList(input);
     boolean isFirstRun = true;
+//    trimBeginning(inputChars);
+//    trimEnding(inputChars);
     while (inputChars.contains('<') && inputChars.contains('>') && inputChars.contains('/')) {
       // find opening mark and save it
       int i = 0;
@@ -30,6 +29,9 @@ public class Extractor {
           inputChars = inputChars.subList(i, inputChars.size());
         }
         i = 0;
+      }
+
+      if (isFirstRun) {
         isFirstRun = false;
       }
 
@@ -82,20 +84,47 @@ public class Extractor {
             .clear();
       }
     }
-    return inputChars.stream().map(Object::toString).collect(Collectors.joining(""));
+
+    return inputChars
+        .stream()
+        .map(Object::toString)
+        .collect(Collectors.joining(""));
   }
 
-  private List<Character> getCharsWithoutHtmlMarksFound(
-      List<Character> inputChars, HtmlMark openingMark, HtmlMark closingMark) {
-    // remove marks
-    List<Character> beforeOpeningMark = inputChars.subList(0, openingMark.getStartIndex());
-    List<Character> inBetweenMarks = inputChars.subList(openingMark.getEndIndex() + 1, closingMark.getStartIndex());
-    List<Character> afterClosingMark = inputChars.subList(closingMark.getEndIndex() + 1, inputChars.size());
-    List<Character> inputCharsWithoutMarksFound =
+  private void trimBeginning(List<Character> chars) {
+    int i = 0;
+    while (i < chars.size() && !Character.valueOf('<').equals(chars.get(i))) {
+      i++;
+    }
+    chars.subList(0, i).clear();
+  }
+
+
+  private void trimEnding(List<Character> chars) {
+    int i = chars.size() - 1;
+    while (i >= 0 && !Character.valueOf('>').equals(chars.get(i))) {
+      i--;
+    }
+    chars.subList(i + 1, chars.size()).clear();
+  }
+
+  private List<Character> toCharList(String text) {
+    List<Character> chars = new ArrayList<>();
+    for (char c : text.toCharArray()) {
+      chars.add(c);
+    }
+    return chars;
+  }
+
+  private List<Character> getCharsWithoutHtmlMarksFound(List<Character> chars, HtmlMark opening, HtmlMark closing) {
+    List<Character> beforeOpeningMark = chars.subList(0, opening.getStartIndex());
+    List<Character> inBetweenMarks = chars.subList(opening.getEndIndex() + 1, closing.getStartIndex());
+    List<Character> afterClosingMark = chars.subList(closing.getEndIndex() + 1, chars.size());
+    List<Character> charsWithoutMarksFound =
         new ArrayList<>(beforeOpeningMark.size() + inBetweenMarks.size() + afterClosingMark.size());
-    inputCharsWithoutMarksFound.addAll(beforeOpeningMark);
-    inputCharsWithoutMarksFound.addAll(inBetweenMarks);
-    inputCharsWithoutMarksFound.addAll(afterClosingMark);
-    return inputCharsWithoutMarksFound;
+    charsWithoutMarksFound.addAll(beforeOpeningMark);
+    charsWithoutMarksFound.addAll(inBetweenMarks);
+    charsWithoutMarksFound.addAll(afterClosingMark);
+    return charsWithoutMarksFound;
   }
 }
