@@ -12,32 +12,27 @@ public class Extractor {
       trimEnding(inputChars);
     }
     while (containsHtmlMarks(inputChars)) {
-      // find mark opening char
-      int i = 0;
-      while (!Character.valueOf('<').equals(inputChars.get(i))) {
-        i++;
-      }
-
+      int index = findMarkOpeningChar(inputChars);
       // save initial first mark
-      HtmlMark firstMark = HtmlMark.withStartIndex(i);
-      while (!Character.valueOf('>').equals(inputChars.get(i))) {
-        firstMark.append(inputChars.get(i++));
+      HtmlMark firstMark = HtmlMark.withStartIndex(index);
+      while (!isMarkClosingChar(inputChars.get(index))) {
+        firstMark.append(inputChars.get(index++));
       }
-      firstMark.append(inputChars.get(i));
-      firstMark.setEndIndex(i);
+      firstMark.append(inputChars.get(index));
+      firstMark.setEndIndex(index);
 
       // skip content in-between two marks (for now)
-      while (!Character.valueOf('<').equals(inputChars.get(i))) {
-        i++;
+      while (!isMarkOpeningChar(inputChars.get(index))) {
+        index++;
       }
 
       // initial second mark
-      HtmlMark secondMark = HtmlMark.withStartIndex(i);
-      while (!Character.valueOf('>').equals(inputChars.get(i))) {
-        secondMark.append(inputChars.get(i++));
+      HtmlMark secondMark = HtmlMark.withStartIndex(index);
+      while (!isMarkClosingChar(inputChars.get(index))) {
+        secondMark.append(inputChars.get(index++));
       }
-      secondMark.append(inputChars.get(i));
-      secondMark.setEndIndex(i);
+      secondMark.append(inputChars.get(index));
+      secondMark.setEndIndex(index);
 
       // while first isn't opening and second isn't closing, keep looking
       while (!(firstMark.isOpening() && secondMark.isClosing())) {
@@ -45,17 +40,17 @@ public class Extractor {
         firstMark = secondMark;
 
         // skip content in-between two marks (for now)
-        while (!Character.valueOf('<').equals(inputChars.get(i))) {
-          i++;
+        while (!isMarkOpeningChar(inputChars.get(index))) {
+          index++;
         }
 
         // set second 'pointer' on new html mark
-        secondMark = HtmlMark.withStartIndex(i);
-        while (!Character.valueOf('>').equals(inputChars.get(i))) {
-          secondMark.append(inputChars.get(i++));
+        secondMark = HtmlMark.withStartIndex(index);
+        while (!isMarkClosingChar(inputChars.get(index))) {
+          secondMark.append(inputChars.get(index++));
         }
-        secondMark.append(inputChars.get(i));
-        secondMark.setEndIndex(i);
+        secondMark.append(inputChars.get(index));
+        secondMark.setEndIndex(index);
       }
 
       if (firstMark.isPairWith(secondMark)) {
@@ -80,17 +75,33 @@ public class Extractor {
         && inputChars.contains('/');
   }
 
+  private int findMarkOpeningChar(List<Character> chars) {
+    int i = 0;
+    while (!Character.valueOf('<').equals(chars.get(i))) {
+      i++;
+    }
+    return i;
+  }
+
+  private boolean isMarkClosingChar(char c) {
+    return Character.valueOf('>').equals(c);
+  }
+
+  private boolean isMarkOpeningChar(char c) {
+    return Character.valueOf('<').equals(c);
+  }
+
   private void trimBeginning(List<Character> chars) {
-    if (Character.valueOf('<').equals(chars.get(0))) {
+    if (isMarkOpeningChar(chars.get(0))) {
       return;
     }
     int i = 0;
     int j = 0;
-    while (i < chars.size() && !Character.valueOf('<').equals(chars.get(i))) {
+    while (i < chars.size() && !isMarkOpeningChar(chars.get(i))) {
       i++;
       if (Character.valueOf('/').equals(chars.get(i + 1))) {
         j = i + 1;
-        while (!Character.valueOf('>').equals(chars.get(j))) {
+        while (!isMarkClosingChar(chars.get(j))) {
           j++;
         }
       }
@@ -100,15 +111,15 @@ public class Extractor {
 
 
   private void trimEnding(List<Character> chars) {
-    if (Character.valueOf('>').equals(chars.get(chars.size() - 1))) {
+    if (isMarkClosingChar(chars.get(chars.size() - 1))) {
       return;
     }
     int i = chars.size() - 1;
-    while (i >= 0 && !Character.valueOf('>').equals(chars.get(i))) {
+    while (i >= 0 && !isMarkClosingChar(chars.get(i))) {
       i--;
     }
     int j = i;
-    while (j >= 0 && !Character.valueOf('<').equals(chars.get(j))) {
+    while (j >= 0 && !isMarkOpeningChar(chars.get(j))) {
       j--;
     }
     if (!Character.valueOf('/').equals(chars.get(j + 1))) {
