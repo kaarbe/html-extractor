@@ -11,50 +11,50 @@ public class Extractor {
       trimBeginning(inputChars);
       trimEnding(inputChars);
     }
-    while (containsHtmlMarks(inputChars)) {
-      int index = findMarkOpeningChar(inputChars, 0);
-      // save initial first mark
-      HtmlMark firstMark = HtmlMark.withStartIndex(index);
-      while (!isMarkClosingChar(inputChars.get(index))) {
-        firstMark.append(inputChars.get(index++));
+    while (containsHtmlTags(inputChars)) {
+      int index = findTagOpeningChar(inputChars, 0);
+      // save initial first tag
+      HtmlTag firstTag = HtmlTag.withStartIndex(index);
+      while (!isTagClosingChar(inputChars.get(index))) {
+        firstTag.append(inputChars.get(index++));
       }
-      firstMark.append(inputChars.get(index));
-      firstMark.setEndIndex(index);
+      firstTag.append(inputChars.get(index));
+      firstTag.setEndIndex(index);
 
-      // skip content in-between two marks (for now)
-      index = findMarkOpeningChar(inputChars, index);
+      // skip content in-between two tags (for now)
+      index = findTagOpeningChar(inputChars, index);
 
-      // initial second mark
-      HtmlMark secondMark = HtmlMark.withStartIndex(index);
-      while (!isMarkClosingChar(inputChars.get(index))) {
-        secondMark.append(inputChars.get(index++));
+      // initial second tag
+      HtmlTag secondTag = HtmlTag.withStartIndex(index);
+      while (!isTagClosingChar(inputChars.get(index))) {
+        secondTag.append(inputChars.get(index++));
       }
-      secondMark.append(inputChars.get(index));
-      secondMark.setEndIndex(index);
+      secondTag.append(inputChars.get(index));
+      secondTag.setEndIndex(index);
 
       // while first isn't opening and second isn't closing, keep looking
-      while (!(firstMark.isOpening() && secondMark.isClosing())) {
+      while (!(firstTag.isOpening() && secondTag.isClosing())) {
         // move first 'pointer' to the second 'pointer'
-        firstMark = secondMark;
+        firstTag = secondTag;
 
-        // skip content in-between two marks (for now)
-        index = findMarkOpeningChar(inputChars, index);
+        // skip content in-between two tags (for now)
+        index = findTagOpeningChar(inputChars, index);
 
-        // set second 'pointer' on new html mark
-        secondMark = HtmlMark.withStartIndex(index);
-        while (!isMarkClosingChar(inputChars.get(index))) {
-          secondMark.append(inputChars.get(index++));
+        // set second 'pointer' on new html tag
+        secondTag = HtmlTag.withStartIndex(index);
+        while (!isTagClosingChar(inputChars.get(index))) {
+          secondTag.append(inputChars.get(index++));
         }
-        secondMark.append(inputChars.get(index));
-        secondMark.setEndIndex(index);
+        secondTag.append(inputChars.get(index));
+        secondTag.setEndIndex(index);
       }
 
-      if (firstMark.isPairWith(secondMark)) {
-        inputChars = getWithoutHtmlMarksFound(inputChars, firstMark, secondMark);
+      if (firstTag.isPairWith(secondTag)) {
+        inputChars = getWithoutTagsFound(inputChars, firstTag, secondTag);
       } else {
-        // remove marks and content
+        // remove tags and content
         inputChars
-            .subList(firstMark.getStartIndex(), secondMark.getEndIndex() + 1)
+            .subList(firstTag.getStartIndex(), secondTag.getEndIndex() + 1)
             .clear();
       }
     }
@@ -65,39 +65,39 @@ public class Extractor {
         .collect(Collectors.joining(""));
   }
 
-  private static boolean containsHtmlMarks(List<Character> inputChars) {
+  private static boolean containsHtmlTags(List<Character> inputChars) {
     return inputChars.contains('<')
         && inputChars.contains('>')
         && inputChars.contains('/');
   }
 
-  private int findMarkOpeningChar(List<Character> chars, int startIndex) {
+  private int findTagOpeningChar(List<Character> chars, int startIndex) {
     int index = startIndex;
-    while (!isMarkOpeningChar(chars.get(index))) {
+    while (!isTagOpeningChar(chars.get(index))) {
       index++;
     }
     return index;
   }
 
-  private boolean isMarkClosingChar(char c) {
+  private boolean isTagClosingChar(char c) {
     return Character.valueOf('>').equals(c);
   }
 
-  private boolean isMarkOpeningChar(char c) {
+  private boolean isTagOpeningChar(char c) {
     return Character.valueOf('<').equals(c);
   }
 
   private void trimBeginning(List<Character> chars) {
-    if (isMarkOpeningChar(chars.get(0))) {
+    if (isTagOpeningChar(chars.get(0))) {
       return;
     }
     int i = 0;
     int j = 0;
-    while (i < chars.size() && !isMarkOpeningChar(chars.get(i))) {
+    while (i < chars.size() && !isTagOpeningChar(chars.get(i))) {
       i++;
       if (Character.valueOf('/').equals(chars.get(i + 1))) {
         j = i + 1;
-        while (!isMarkClosingChar(chars.get(j))) {
+        while (!isTagClosingChar(chars.get(j))) {
           j++;
         }
       }
@@ -106,15 +106,15 @@ public class Extractor {
   }
 
   private void trimEnding(List<Character> chars) {
-    if (isMarkClosingChar(chars.get(chars.size() - 1))) {
+    if (isTagClosingChar(chars.get(chars.size() - 1))) {
       return;
     }
     int i = chars.size() - 1;
-    while (i >= 0 && !isMarkClosingChar(chars.get(i))) {
+    while (i >= 0 && !isTagClosingChar(chars.get(i))) {
       i--;
     }
     int j = i;
-    while (j >= 0 && !isMarkOpeningChar(chars.get(j))) {
+    while (j >= 0 && !isTagOpeningChar(chars.get(j))) {
       j--;
     }
     if (!Character.valueOf('/').equals(chars.get(j + 1))) {
@@ -132,15 +132,15 @@ public class Extractor {
     return chars;
   }
 
-  private List<Character> getWithoutHtmlMarksFound(List<Character> chars, HtmlMark opening, HtmlMark closing) {
-    List<Character> beforeOpeningMark = chars.subList(0, opening.getStartIndex());
-    List<Character> inBetweenMarks = chars.subList(opening.getEndIndex() + 1, closing.getStartIndex());
-    List<Character> afterClosingMark = chars.subList(closing.getEndIndex() + 1, chars.size());
-    List<Character> charsWithoutMarksFound =
-        new ArrayList<>(beforeOpeningMark.size() + inBetweenMarks.size() + afterClosingMark.size());
-    charsWithoutMarksFound.addAll(beforeOpeningMark);
-    charsWithoutMarksFound.addAll(inBetweenMarks);
-    charsWithoutMarksFound.addAll(afterClosingMark);
-    return charsWithoutMarksFound;
+  private List<Character> getWithoutTagsFound(List<Character> chars, HtmlTag opening, HtmlTag closing) {
+    List<Character> beforeOpeningTag = chars.subList(0, opening.getStartIndex());
+    List<Character> inBetweenTags = chars.subList(opening.getEndIndex() + 1, closing.getStartIndex());
+    List<Character> afterClosingTag = chars.subList(closing.getEndIndex() + 1, chars.size());
+    List<Character> charsWithoutTagsFound =
+        new ArrayList<>(beforeOpeningTag.size() + inBetweenTags.size() + afterClosingTag.size());
+    charsWithoutTagsFound.addAll(beforeOpeningTag);
+    charsWithoutTagsFound.addAll(inBetweenTags);
+    charsWithoutTagsFound.addAll(afterClosingTag);
+    return charsWithoutTagsFound;
   }
 }

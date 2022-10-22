@@ -1,18 +1,18 @@
 package com.bednarski;
 
-public class HtmlMark {
+public class HtmlTag {
 
   private final StringBuilder content;
   private final int startIndex;
   private int endIndex;
 
-  private HtmlMark(int startIndex) {
+  private HtmlTag(int startIndex) {
     this.startIndex = startIndex;
     this.content = new StringBuilder();
   }
 
-  public static HtmlMark withStartIndex(int startIndex) {
-    return new HtmlMark(startIndex);
+  public static HtmlTag withStartIndex(int startIndex) {
+    return new HtmlTag(startIndex);
   }
 
   public void append(char c) {
@@ -29,7 +29,7 @@ public class HtmlMark {
     return content.startsWith("</") && content.endsWith(">");
   }
 
-  public boolean isPairWith(HtmlMark other) {
+  public boolean isPairWith(HtmlTag other) {
     if (!(this.isOpening() && other.isClosing())) {
       return false;
     }
