@@ -12,7 +12,7 @@ public class Extractor {
       trimEnding(inputChars);
     }
     while (containsHtmlMarks(inputChars)) {
-      int index = findMarkOpeningChar(inputChars);
+      int index = findMarkOpeningChar(inputChars, 0);
       // save initial first mark
       HtmlMark firstMark = HtmlMark.withStartIndex(index);
       while (!isMarkClosingChar(inputChars.get(index))) {
@@ -22,9 +22,7 @@ public class Extractor {
       firstMark.setEndIndex(index);
 
       // skip content in-between two marks (for now)
-      while (!isMarkOpeningChar(inputChars.get(index))) {
-        index++;
-      }
+      index = findMarkOpeningChar(inputChars, index);
 
       // initial second mark
       HtmlMark secondMark = HtmlMark.withStartIndex(index);
@@ -40,9 +38,7 @@ public class Extractor {
         firstMark = secondMark;
 
         // skip content in-between two marks (for now)
-        while (!isMarkOpeningChar(inputChars.get(index))) {
-          index++;
-        }
+        index = findMarkOpeningChar(inputChars, index);
 
         // set second 'pointer' on new html mark
         secondMark = HtmlMark.withStartIndex(index);
@@ -75,12 +71,12 @@ public class Extractor {
         && inputChars.contains('/');
   }
 
-  private int findMarkOpeningChar(List<Character> chars) {
-    int i = 0;
-    while (!Character.valueOf('<').equals(chars.get(i))) {
-      i++;
+  private int findMarkOpeningChar(List<Character> chars, int startIndex) {
+    int index = startIndex;
+    while (!isMarkOpeningChar(chars.get(index))) {
+      index++;
     }
-    return i;
+    return index;
   }
 
   private boolean isMarkClosingChar(char c) {
@@ -108,7 +104,6 @@ public class Extractor {
     }
     chars.subList(0, Math.max(i, ++j)).clear();
   }
-
 
   private void trimEnding(List<Character> chars) {
     if (isMarkClosingChar(chars.get(chars.size() - 1))) {
