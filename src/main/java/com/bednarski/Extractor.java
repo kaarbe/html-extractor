@@ -65,10 +65,10 @@ public class Extractor {
         .collect(Collectors.joining(""));
   }
 
-  private static boolean containsHtmlTags(List<Character> inputChars) {
-    return inputChars.contains('<')
-        && inputChars.contains('>')
-        && inputChars.contains('/');
+  private static boolean containsHtmlTags(List<Character> chars) {
+    return chars.contains('<')
+        && chars.contains('>')
+        && chars.contains('/');
   }
 
   private int findTagOpeningChar(List<Character> chars, int startIndex) {

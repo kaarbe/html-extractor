@@ -21,12 +21,15 @@ public class HtmlTag {
 
   public boolean isOpening() {
     String content = this.content.toString();
-    return !content.startsWith("</") && content.startsWith("<") && content.endsWith(">");
+    return !content.startsWith("</")
+        && content.startsWith("<")
+        && content.endsWith(">");
   }
 
   public boolean isClosing() {
     String content = this.content.toString();
-    return content.startsWith("</") && content.endsWith(">");
+    return content.startsWith("</")
+        && content.endsWith(">");
   }
 
   public boolean isPairWith(HtmlTag other) {
