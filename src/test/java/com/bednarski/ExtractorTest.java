@@ -2,6 +2,8 @@ package com.bednarski;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -13,24 +15,26 @@ class ExtractorTest {
   @InjectMocks
   Extractor extractor;
 
-  @Test
-  void shouldExtractFromHtmlWithoutNesting() {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void shouldExtractAndTrimFromHtmlWithoutNesting(boolean shouldTrim) {
     // given
     var htmlInput =
         "hej</h1><h1>Dog</h1>" +
         "<h1>Cat</h1>" +
-        "<h1>Fish</H1><h1>hej";
-    var correctlyExtractedText = "DogCat";
+        "<h1>Fish</H1>Hej";
+    var expected = "hejDogCatHej";
+    var expectedWithTrimming = "DogCat";
 
     // when
-    String result = extractor.extractPlainText(htmlInput, true);
+    String result = extractor.extractPlainText(htmlInput, shouldTrim);
 
     // then
-    assertEquals(correctlyExtractedText, result);
+    assertEquals(shouldTrim ? expectedWithTrimming : expected, result);
   }
 
   @Test
-  void shouldExtractFromHtmlWithNesting() {
+  void shouldExtractAndTrimFromHtmlWithNesting() {
     // given
     var htmlInput =
         "<h1>" +

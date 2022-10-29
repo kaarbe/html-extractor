@@ -11,8 +11,9 @@ public class Extractor {
       trimBeginning(inputChars);
       trimEnding(inputChars);
     }
-    while (containsHtmlTags(inputChars)) {
-      int index = findTagOpeningChar(inputChars, 0);
+    int index = 0;
+    while (mayContainHtmlTag(inputChars) && index < inputChars.size()) {
+      index = findTagOpeningChar(inputChars, 0);
       // save initial first tag
       HtmlTag firstTag = HtmlTag.withStartIndex(index);
       while (!isTagClosingChar(inputChars.get(index))) {
@@ -59,16 +60,16 @@ public class Extractor {
       }
     }
 
-    return inputChars
+
+    return removeAnyHtmlTagsLeft(inputChars)
         .stream()
         .map(Object::toString)
         .collect(Collectors.joining(""));
   }
 
-  private static boolean containsHtmlTags(List<Character> chars) {
+  private static boolean mayContainHtmlTag(List<Character> chars) {
     return chars.contains('<')
-        && chars.contains('>')
-        && chars.contains('/');
+        && chars.contains('>');
   }
 
   private int findTagOpeningChar(List<Character> chars, int startIndex) {
@@ -142,5 +143,21 @@ public class Extractor {
     charsWithoutTagsFound.addAll(inBetweenTags);
     charsWithoutTagsFound.addAll(afterClosingTag);
     return charsWithoutTagsFound;
+  }
+
+  private List<Character> removeAnyHtmlTagsLeft(List<Character> chars) {
+    if (mayContainHtmlTag(chars)) {
+      int index = 0;
+      while (mayContainHtmlTag(chars) && index < chars.size()) {
+        index = findTagOpeningChar(chars, index);
+        var tag = HtmlTag.withStartIndex(index);
+        while (!isTagClosingChar(chars.get(index))) {
+          index++;
+        }
+        tag.setEndIndex(index);
+        chars.subList(tag.getStartIndex(), tag.getEndIndex() + 1).clear();
+      }
+    }
+    return chars;
   }
 }
