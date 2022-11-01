@@ -61,7 +61,7 @@ public class Extractor {
     }
 
 
-    return removeAnyHtmlTagsLeft(inputChars)
+    return removeRemainingTags(inputChars)
         .stream()
         .map(Object::toString)
         .collect(Collectors.joining(""));
@@ -145,7 +145,7 @@ public class Extractor {
     return charsWithoutTagsFound;
   }
 
-  private List<Character> removeAnyHtmlTagsLeft(List<Character> chars) {
+  private List<Character> removeRemainingTags(List<Character> chars) {
     if (mayContainHtmlTag(chars)) {
       int index = 0;
       while (mayContainHtmlTag(chars) && index < chars.size()) {

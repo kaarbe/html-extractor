@@ -3,9 +3,13 @@ package com.bednarski;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -50,5 +54,24 @@ class ExtractorTest {
 
     // then
     assertEquals(correctlyExtractedText, result);
+  }
+
+  @ParameterizedTest
+  @MethodSource("getHtmlSamples")
+  void shouldTrimAndExtract(String htmlInput, String expectedOutput) {
+    String result = extractor.extractPlainText(htmlInput, true);
+    assertEquals(expectedOutput, result);
+  }
+
+  public static Stream<Arguments> getHtmlSamples() {
+    return Stream.of(
+        Arguments.of("<h1>Nayeem loves counseling</h1>", "Nayeem loves counseling"),
+        Arguments.of("<Amee>safat codes like a ninja</amee>", ""),
+        Arguments.of("<SA premium>Imtiaz has a secret crush</SA premium>", "Imtiaz has a secret crush"),
+        Arguments.of(
+            "<h1><h1>Sanjay has no watch </h1></h1><par>So wait for a while</par>",
+            "Sanjay has no watch So wait for a while"
+        )
+    );
   }
 }
