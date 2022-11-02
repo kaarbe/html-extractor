@@ -1,6 +1,7 @@
 package com.bednarski;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 public class Extractor {
@@ -8,8 +9,8 @@ public class Extractor {
   public String extractPlainText(String input, boolean shouldTrim) {
     List<Character> inputChars = toCharList(input);
     if (shouldTrim) {
-      trimBeginning(inputChars);
-      trimEnding(inputChars);
+      parallelTrim(inputChars);
+//      trim(inputChars);
     }
     int index = 0;
     while (mayContainHtmlTag(inputChars) && index < inputChars.size()) {
@@ -88,22 +89,70 @@ public class Extractor {
     return Character.valueOf('<').equals(c);
   }
 
-  private void trimBeginning(List<Character> chars) {
-    if (isTagOpeningChar(chars.get(0))) {
-      return;
+  private void trim(List<Character> chars) {
+    trimEnding(chars);
+    trimBeginning(chars);
+  }
+
+  private void parallelTrim(List<Character> chars) {
+//    List<Integer> indexes = Stream.of(calculateEndIndex(chars), calculateStartIndex(chars))
+//        .map(CompletableFuture::join)
+//        .toList();
+//    if (indexes.get(0) != -1) {
+//      chars.subList(indexes.get(0), chars.size()).clear();
+//    }
+//    if (indexes.get(1) != -1) {
+//      chars.subList(0, indexes.get(1)).clear();
+//    }
+
+    CompletableFuture<Integer> endIndexCalculation = calculateEndIndex(chars);
+    CompletableFuture<Integer> startIndexCalculation = calculateStartIndex(chars);
+    CompletableFuture.allOf(endIndexCalculation, startIndexCalculation).join();
+    Integer endIndex = endIndexCalculation.join();
+    if (endIndex != -1) {
+      chars.subList(endIndex, chars.size()).clear();
     }
-    int i = 0;
-    int j = 0;
-    while (i < chars.size() && !isTagOpeningChar(chars.get(i))) {
-      i++;
-      if (Character.valueOf('/').equals(chars.get(i + 1))) {
-        j = i + 1;
-        while (!isTagClosingChar(chars.get(j))) {
-          j++;
+    Integer startIndex = startIndexCalculation.join();
+    if (startIndex != -1) {
+      chars.subList(0, startIndex).clear();
+    }
+  }
+
+  private CompletableFuture<Integer> calculateEndIndex(List<Character> chars) {
+    return CompletableFuture.supplyAsync(() -> {
+      if (isTagClosingChar(chars.get(chars.size() - 1))) {
+        return -1;
+      }
+      int i = chars.size() - 1;
+      while (i >= 0 && !isTagClosingChar(chars.get(i))) {
+        i--;
+      }
+      int j = i;
+      while (j >= 0 && !isTagOpeningChar(chars.get(j))) {
+        j--;
+      }
+      return !Character.valueOf('/').equals(chars.get(j + 1)) ? j : i + 1;
+    });
+  }
+
+  private CompletableFuture<Integer> calculateStartIndex(List<Character> chars) {
+    return CompletableFuture.supplyAsync(() -> {
+      if (isTagOpeningChar(chars.get(0))) {
+        return -1;
+      }
+      int i = 0;
+      int j = 0;
+      while (i < chars.size() && !isTagOpeningChar(chars.get(i))) {
+        i++;
+        if (Character.valueOf('/').equals(chars.get(i + 1))) {
+          j = i + 1;
+          while (!isTagClosingChar(chars.get(j))) {
+            j++;
+          }
         }
       }
-    }
-    chars.subList(0, Math.max(i, ++j)).clear();
+      return Math.max(i, ++j);
+    });
   }
 
   private void trimEnding(List<Character> chars) {
@@ -123,6 +172,24 @@ public class Extractor {
     } else {
       chars.subList(i + 1, chars.size()).clear();
     }
+  }
+
+  private void trimBeginning(List<Character> chars) {
+    if (isTagOpeningChar(chars.get(0))) {
+      return;
+    }
+    int i = 0;
+    int j = 0;
+    while (i < chars.size() && !isTagOpeningChar(chars.get(i))) {
+      i++;
+      if (Character.valueOf('/').equals(chars.get(i + 1))) {
+        j = i + 1;
+        while (!isTagClosingChar(chars.get(j))) {
+          j++;
+        }
+      }
+    }
+    chars.subList(0, Math.max(i, ++j)).clear();
   }
 
   private List<Character> toCharList(String text) {
@@ -150,7 +217,7 @@ public class Extractor {
       int index = 0;
       while (mayContainHtmlTag(chars) && index < chars.size()) {
         index = findTagOpeningChar(chars, index);
-        var tag = HtmlTag.withStartIndex(index);
+        HtmlTag tag = HtmlTag.withStartIndex(index);
         while (!isTagClosingChar(chars.get(index))) {
           index++;
         }
