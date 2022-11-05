@@ -9,8 +9,7 @@ public class Extractor {
   public String extractPlainText(String input, boolean shouldTrim) {
     List<Character> inputChars = toCharList(input);
     if (shouldTrim) {
-      parallelTrim(inputChars);
-//      trim(inputChars);
+      trim(inputChars);
     }
     int index = 0;
     while (mayContainHtmlTag(inputChars) && index < inputChars.size()) {
@@ -61,7 +60,6 @@ public class Extractor {
       }
     }
 
-
     return removeRemainingTags(inputChars)
         .stream()
         .map(Object::toString)
@@ -90,35 +88,20 @@ public class Extractor {
   }
 
   private void trim(List<Character> chars) {
-    trimEnding(chars);
-    trimBeginning(chars);
-  }
-
-  private void parallelTrim(List<Character> chars) {
-//    List<Integer> indexes = Stream.of(calculateEndIndex(chars), calculateStartIndex(chars))
-//        .map(CompletableFuture::join)
-//        .toList();
-//    if (indexes.get(0) != -1) {
-//      chars.subList(indexes.get(0), chars.size()).clear();
-//    }
-//    if (indexes.get(1) != -1) {
-//      chars.subList(0, indexes.get(1)).clear();
-//    }
-
-    CompletableFuture<Integer> endIndexCalculation = calculateEndIndex(chars);
-    CompletableFuture<Integer> startIndexCalculation = calculateStartIndex(chars);
-    CompletableFuture.allOf(endIndexCalculation, startIndexCalculation).join();
-    Integer endIndex = endIndexCalculation.join();
+    CompletableFuture<Integer> lastValidCharIndex = findLastValidHtmlTagCharIndex(chars);
+    CompletableFuture<Integer> firstValidCharIndex = findFirstValidHtmlTagCharIndex(chars);
+    CompletableFuture.allOf(lastValidCharIndex, firstValidCharIndex).join();
+    Integer endIndex = lastValidCharIndex.join();
     if (endIndex != -1) {
       chars.subList(endIndex, chars.size()).clear();
     }
-    Integer startIndex = startIndexCalculation.join();
+    Integer startIndex = firstValidCharIndex.join();
     if (startIndex != -1) {
       chars.subList(0, startIndex).clear();
     }
   }
 
-  private CompletableFuture<Integer> calculateEndIndex(List<Character> chars) {
+  private CompletableFuture<Integer> findLastValidHtmlTagCharIndex(List<Character> chars) {
     return CompletableFuture.supplyAsync(() -> {
       if (isTagClosingChar(chars.get(chars.size() - 1))) {
         return -1;
@@ -135,7 +118,7 @@ public class Extractor {
     });
   }
 
-  private CompletableFuture<Integer> calculateStartIndex(List<Character> chars) {
+  private CompletableFuture<Integer> findFirstValidHtmlTagCharIndex(List<Character> chars) {
     return CompletableFuture.supplyAsync(() -> {
       if (isTagOpeningChar(chars.get(0))) {
         return -1;
@@ -153,43 +136,6 @@ public class Extractor {
       }
       return Math.max(i, ++j);
     });
-  }
-
-  private void trimEnding(List<Character> chars) {
-    if (isTagClosingChar(chars.get(chars.size() - 1))) {
-      return;
-    }
-    int i = chars.size() - 1;
-    while (i >= 0 && !isTagClosingChar(chars.get(i))) {
-      i--;
-    }
-    int j = i;
-    while (j >= 0 && !isTagOpeningChar(chars.get(j))) {
-      j--;
-    }
-    if (!Character.valueOf('/').equals(chars.get(j + 1))) {
-      chars.subList(j, chars.size()).clear();
-    } else {
-      chars.subList(i + 1, chars.size()).clear();
-    }
-  }
-
-  private void trimBeginning(List<Character> chars) {
-    if (isTagOpeningChar(chars.get(0))) {
-      return;
-    }
-    int i = 0;
-    int j = 0;
-    while (i < chars.size() && !isTagOpeningChar(chars.get(i))) {
-      i++;
-      if (Character.valueOf('/').equals(chars.get(i + 1))) {
-        j = i + 1;
-        while (!isTagClosingChar(chars.get(j))) {
-          j++;
-        }
-      }
-    }
-    chars.subList(0, Math.max(i, ++j)).clear();
   }
 
   private List<Character> toCharList(String text) {
