@@ -44,6 +44,9 @@ public class HtmlTag {
         .toString()
         .replace("</", "")
         .replace(">", "");
+    if (content.isEmpty() || otherContent.isEmpty()) {
+      return false;
+    }
     return content.equals(otherContent);
   }
 

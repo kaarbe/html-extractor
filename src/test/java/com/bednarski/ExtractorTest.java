@@ -71,7 +71,7 @@ class ExtractorTest {
         Arguments.of(
             "<h1><h1>Sanjay has no watch </h1></h1><par>So wait for a while</par>",
             "Sanjay has no watch So wait for a while"
-        ) // ,
+        ),
 //        Arguments.of("<h1>some</h1>", "some"),
 //        Arguments.of("<h1>had<h1>public</h1></h1>", "hadpublic"),
 //        Arguments.of("<h1>had<h1>public</h1515></h1>", "had"),
@@ -79,7 +79,7 @@ class ExtractorTest {
 //        Arguments.of("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<", ""),
 //        Arguments.of(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", ""),
 //        Arguments.of("<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>", ""),
-//        Arguments.of("<>hello</>", ""),
+        Arguments.of("<>hello</>", "")
 //        Arguments.of("<>hello</><h>dim</h>", "dim"),
 //        Arguments.of("<>hello</><h>dim</h>>>>>", "dim")
     );
