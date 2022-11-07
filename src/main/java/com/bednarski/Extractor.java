@@ -51,7 +51,7 @@ public class Extractor {
       }
 
       if (firstTag.isPairWith(secondTag)) {
-        inputChars = getWithoutTagsFound(inputChars, firstTag, secondTag);
+        inputChars = getNewWithoutTagsFound(inputChars, firstTag, secondTag);
       } else {
         // remove tags and content
         inputChars
@@ -146,7 +146,7 @@ public class Extractor {
     return chars;
   }
 
-  private List<Character> getWithoutTagsFound(List<Character> chars, HtmlTag opening, HtmlTag closing) {
+  private List<Character> getNewWithoutTagsFound(final List<Character> chars, HtmlTag opening, HtmlTag closing) {
     List<Character> beforeOpeningTag = chars.subList(0, opening.getStartIndex());
     List<Character> inBetweenTags = chars.subList(opening.getEndIndex() + 1, closing.getStartIndex());
     List<Character> afterClosingTag = chars.subList(closing.getEndIndex() + 1, chars.size());
