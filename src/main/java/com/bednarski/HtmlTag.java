@@ -6,12 +6,12 @@ public class HtmlTag {
   private final int startIndex;
   private int endIndex;
 
-  private HtmlTag(int startIndex) {
+  private HtmlTag(final int startIndex) {
     this.startIndex = startIndex;
     this.content = new StringBuilder();
   }
 
-  public static HtmlTag withStartIndex(int startIndex) {
+  public static HtmlTag withStartIndex(final int startIndex) {
     return new HtmlTag(startIndex);
   }
 
@@ -20,14 +20,14 @@ public class HtmlTag {
   }
 
   public boolean isOpening() {
-    String content = this.content.toString();
+    final String content = this.content.toString();
     return !content.startsWith("</")
         && content.startsWith("<")
         && content.endsWith(">");
   }
 
   public boolean isClosing() {
-    String content = this.content.toString();
+    final String content = this.content.toString();
     return content.startsWith("</")
         && content.endsWith(">");
   }
@@ -36,11 +36,11 @@ public class HtmlTag {
     if (!(this.isOpening() && other.isClosing())) {
       return false;
     }
-    String content = this.content
+    final String content = this.content
         .toString()
         .replace("<", "")
         .replace(">", "");
-    String otherContent = other.content
+    final String otherContent = other.content
         .toString()
         .replace("</", "")
         .replace(">", "");
