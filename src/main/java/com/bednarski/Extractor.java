@@ -7,84 +7,49 @@ import java.util.stream.Collectors;
 public class Extractor {
 
   public String extractPlainText(String input, boolean shouldTrim) {
-    List<Character> inputChars = toCharList(input);
+    List<Character> chars = toCharList(input);
     if (shouldTrim) {
-      trim(inputChars);
+      trim(chars);
     }
     int index = 0;
-    while (mayContainHtmlTag(inputChars) && index < inputChars.size()) {
-      index = findTagOpeningChar(inputChars, 0);
+    while (mayContainHtmlTag(chars) && index < chars.size()) {
+      index = findFirstTagOpeningChar(chars);
       // save initial first tag
-      HtmlTag firstTag = HtmlTag.withStartIndex(index);
-      while (!isTagClosingChar(inputChars.get(index))) {
-        firstTag.append(inputChars.get(index++));
-      }
-      firstTag.append(inputChars.get(index));
-      firstTag.setEndIndex(index);
-
+      HtmlTag firstTag = findEndingAndSaveHtmlTag(index, chars);
+      index = firstTag.getEndIndex();
       // skip content in-between two tags (for now)
-      index = findTagOpeningChar(inputChars, index);
-
+      index = findTagOpeningChar(index, chars);
       // initial second tag
-      HtmlTag secondTag = HtmlTag.withStartIndex(index);
-      while (!isTagClosingChar(inputChars.get(index))) {
-        secondTag.append(inputChars.get(index++));
-      }
-      secondTag.append(inputChars.get(index));
-      secondTag.setEndIndex(index);
+      HtmlTag secondTag = findEndingAndSaveHtmlTag(index, chars);
+      index = secondTag.getEndIndex();
 
-      // while first isn't opening and second isn't closing, keep looking
       while (!(firstTag.isOpening() && secondTag.isClosing())) {
         // move first 'pointer' to the second 'pointer'
         firstTag = secondTag;
-
         // skip content in-between two tags (for now)
-        index = findTagOpeningChar(inputChars, index);
-
+        index = findTagOpeningChar(index, chars);
         // set second 'pointer' on new html tag
-        secondTag = HtmlTag.withStartIndex(index);
-        while (!isTagClosingChar(inputChars.get(index))) {
-          secondTag.append(inputChars.get(index++));
-        }
-        secondTag.append(inputChars.get(index));
-        secondTag.setEndIndex(index);
+        secondTag = findEndingAndSaveHtmlTag(index, chars);
+        index = secondTag.getEndIndex();
       }
 
-      if (firstTag.isPairWith(secondTag)) {
-        inputChars = getNewWithoutTagsFound(inputChars, firstTag, secondTag);
-      } else {
-        // remove tags and content
-        inputChars
-            .subList(firstTag.getStartIndex(), secondTag.getEndIndex() + 1)
-            .clear();
-      }
+      chars = firstTag.isPairWith(secondTag)
+          ? getWithoutTags(chars, firstTag, secondTag)
+          : getWithoutTagsAndContent(chars, firstTag, secondTag);
     }
 
-    return removeRemainingTags(inputChars)
+    return getWithoutRemainingTags(chars)
         .stream()
         .map(Object::toString)
         .collect(Collectors.joining(""));
   }
 
-  private static boolean mayContainHtmlTag(List<Character> chars) {
-    return chars.contains('<')
-        && chars.contains('>');
-  }
-
-  private int findTagOpeningChar(List<Character> chars, int startIndex) {
-    int index = startIndex;
-    while (!isTagOpeningChar(chars.get(index))) {
-      index++;
+  private List<Character> toCharList(String text) {
+    List<Character> chars = new ArrayList<>();
+    for (char c : text.toCharArray()) {
+      chars.add(c);
     }
-    return index;
-  }
-
-  private boolean isTagClosingChar(char c) {
-    return Character.valueOf('>').equals(c);
-  }
-
-  private boolean isTagOpeningChar(char c) {
-    return Character.valueOf('<').equals(c);
+    return chars;
   }
 
   private void trim(List<Character> chars) {
@@ -93,11 +58,15 @@ public class Extractor {
     CompletableFuture.allOf(lastValidCharIndex, firstValidCharIndex).join();
     Integer endIndex = lastValidCharIndex.join();
     if (endIndex != -1) {
-      chars.subList(endIndex, chars.size()).clear();
+      chars
+          .subList(endIndex, chars.size())
+          .clear();
     }
     Integer startIndex = firstValidCharIndex.join();
     if (startIndex != -1) {
-      chars.subList(0, startIndex).clear();
+      chars
+          .subList(0, startIndex)
+          .clear();
     }
   }
 
@@ -116,6 +85,14 @@ public class Extractor {
       }
       return !Character.valueOf('/').equals(chars.get(j + 1)) ? j : i + 1;
     });
+  }
+
+  private boolean isTagClosingChar(char c) {
+    return Character.valueOf('>').equals(c);
+  }
+
+  private boolean isTagOpeningChar(char c) {
+    return Character.valueOf('<').equals(c);
   }
 
   private CompletableFuture<Integer> findFirstValidHtmlTagCharIndex(List<Character> chars) {
@@ -138,15 +115,35 @@ public class Extractor {
     });
   }
 
-  private List<Character> toCharList(String text) {
-    List<Character> chars = new ArrayList<>();
-    for (char c : text.toCharArray()) {
-      chars.add(c);
-    }
-    return chars;
+  private boolean mayContainHtmlTag(List<Character> chars) {
+    return chars.contains('<')
+        && chars.contains('>');
   }
 
-  private List<Character> getNewWithoutTagsFound(final List<Character> chars, HtmlTag opening, HtmlTag closing) {
+  private int findFirstTagOpeningChar(List<Character> chars) {
+    return findTagOpeningChar(0, chars);
+  }
+
+  private int findTagOpeningChar(final int startIndex, List<Character> chars) {
+    int index = startIndex;
+    while (!isTagOpeningChar(chars.get(index))) {
+      index++;
+    }
+    return index;
+  }
+
+  private HtmlTag findEndingAndSaveHtmlTag(final int startIndex, List<Character> chars) {
+    int currentIndex = startIndex;
+    HtmlTag tag = HtmlTag.withStartIndex(currentIndex);
+    while (!isTagClosingChar(chars.get(currentIndex))) {
+      tag.append(chars.get(currentIndex++));
+    }
+    tag.append(chars.get(currentIndex));
+    tag.setEndIndex(currentIndex);
+    return tag;
+  }
+
+  private List<Character> getWithoutTags(final List<Character> chars, HtmlTag opening, HtmlTag closing) {
     List<Character> beforeOpeningTag = chars.subList(0, opening.getStartIndex());
     List<Character> inBetweenTags = chars.subList(opening.getEndIndex() + 1, closing.getStartIndex());
     List<Character> afterClosingTag = chars.subList(closing.getEndIndex() + 1, chars.size());
@@ -158,19 +155,28 @@ public class Extractor {
     return charsWithoutTagsFound;
   }
 
-  private List<Character> removeRemainingTags(List<Character> chars) {
+  private List<Character> getWithoutTagsAndContent(final List<Character> chars, HtmlTag firstTag, HtmlTag secondTag) {
+    chars
+        .subList(firstTag.getStartIndex(), secondTag.getEndIndex() + 1)
+        .clear();
+    return new ArrayList<>(chars);
+  }
+
+  private List<Character> getWithoutRemainingTags(final List<Character> chars) {
     if (mayContainHtmlTag(chars)) {
       int index = 0;
       while (mayContainHtmlTag(chars) && index < chars.size()) {
-        index = findTagOpeningChar(chars, index);
+        index = findTagOpeningChar(index, chars);
         HtmlTag tag = HtmlTag.withStartIndex(index);
         while (!isTagClosingChar(chars.get(index))) {
           index++;
         }
         tag.setEndIndex(index);
-        chars.subList(tag.getStartIndex(), tag.getEndIndex() + 1).clear();
+        chars
+            .subList(tag.getStartIndex(), tag.getEndIndex() + 1)
+            .clear();
       }
     }
-    return chars;
+    return new ArrayList<>(chars);
   }
 }
