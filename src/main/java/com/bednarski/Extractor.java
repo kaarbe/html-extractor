@@ -6,8 +6,13 @@ import java.util.stream.Collectors;
 
 public class Extractor {
 
+  private static final String EMPTY_STRING = "";
+
   public String extractPlainText(String input, boolean shouldTrim) {
-    List<Character> chars = toCharList(input);
+    List<Character> chars = toValidatedCharList(input);
+    if (chars.isEmpty()) {
+      return EMPTY_STRING;
+    }
     if (shouldTrim) {
       trim(chars);
     }
@@ -44,12 +49,13 @@ public class Extractor {
         .collect(Collectors.joining(""));
   }
 
-  private List<Character> toCharList(String text) {
+  private List<Character> toValidatedCharList(String text) {
     List<Character> chars = new ArrayList<>();
     for (char c : text.toCharArray()) {
       chars.add(c);
     }
-    return chars;
+    Set<Character> uniqueChars = new HashSet<>(chars);
+    return uniqueChars.size() < 5 ? Collections.emptyList() : chars;
   }
 
   private void trim(List<Character> chars) {
@@ -135,7 +141,7 @@ public class Extractor {
   private HtmlTag findEndingAndSaveHtmlTag(final int startIndex, List<Character> chars) {
     int currentIndex = startIndex;
     HtmlTag tag = HtmlTag.withStartIndex(currentIndex);
-    while (!isTagClosingChar(chars.get(currentIndex))) {
+    while (!isTagClosingChar(chars.get(currentIndex)) && currentIndex < chars.size()) {
       tag.append(chars.get(currentIndex++));
     }
     tag.append(chars.get(currentIndex));
@@ -163,15 +169,15 @@ public class Extractor {
   }
 
   private List<Character> getWithoutRemainingTags(final List<Character> chars) {
-    if (mayContainHtmlTag(chars)) {
+    if (!mayContainHtmlTag(chars)) {
+      return chars;
+    }
+    while (mayContainHtmlTag(chars)) {
       int index = 0;
-      while (mayContainHtmlTag(chars) && index < chars.size()) {
-        index = findTagOpeningChar(index, chars);
-        HtmlTag tag = HtmlTag.withStartIndex(index);
-        while (!isTagClosingChar(chars.get(index))) {
-          index++;
-        }
-        tag.setEndIndex(index);
+      index = findTagOpeningChar(index, chars);
+      HtmlTag tag = findEndingAndSaveHtmlTag(index, chars);
+      index = tag.getEndIndex();
+      if (isTagClosingChar(chars.get(index))) {
         chars
             .subList(tag.getStartIndex(), tag.getEndIndex() + 1)
             .clear();
