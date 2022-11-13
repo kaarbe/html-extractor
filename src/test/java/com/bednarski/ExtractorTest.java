@@ -65,6 +65,7 @@ class ExtractorTest {
 
   static Stream<Arguments> getHtmlSamples() {
     return Stream.of(
+        Arguments.of("<a>a</a>", "a"),
         Arguments.of("<h1>Nayeem loves counseling</h1>", "Nayeem loves counseling"),
         Arguments.of("<Amee>safat codes like a ninja</amee>", ""),
         Arguments.of("<SA premium>Imtiaz has a secret crush</SA premium>", "Imtiaz has a secret crush"),
