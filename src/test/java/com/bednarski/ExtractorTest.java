@@ -63,7 +63,7 @@ class ExtractorTest {
     assertEquals(expectedOutput, result);
   }
 
-  public static Stream<Arguments> getHtmlSamples() {
+  static Stream<Arguments> getHtmlSamples() {
     return Stream.of(
         Arguments.of("<h1>Nayeem loves counseling</h1>", "Nayeem loves counseling"),
         Arguments.of("<Amee>safat codes like a ninja</amee>", ""),
