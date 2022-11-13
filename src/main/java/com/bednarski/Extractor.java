@@ -132,10 +132,10 @@ public class Extractor {
   }
 
   private List<Character> getWithoutRemainingTags(final List<Character> chars) {
-    List<Character> remainingChars = new ArrayList<>(chars);
-    if (!mayContainHtmlTag(remainingChars)) {
-      return remainingChars;
+    if (!mayContainHtmlTag(chars)) {
+      return chars;
     }
+    List<Character> remainingChars = new ArrayList<>(chars);
     while (mayContainHtmlTag(remainingChars)) {
       int index = 0;
       HtmlTag tag = HtmlTag.findOne(index, remainingChars);
