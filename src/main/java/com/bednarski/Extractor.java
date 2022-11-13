@@ -70,11 +70,12 @@ public class Extractor {
 
   private CompletableFuture<Integer> findLastValidHtmlTagCharIndex(final List<Character> chars) {
     return CompletableFuture.supplyAsync(() -> {
-      if (Identifier.isTagClosingChar(chars.get(chars.size() - 1))) {
+      if (Identifier.isTagClosingChar(chars.get(chars.size() - 1))
+          && !Identifier.isTagClosingChar(chars.get(chars.size() - 2))) {
         return -1;
       }
       int i = chars.size() - 1;
-      while (i >= 0 && !Identifier.isTagClosingChar(chars.get(i))) {
+      while (i >= 0 && areLastTwoTagClosingChars(i, chars)) {
         i--;
       }
       int j = i;
@@ -83,6 +84,10 @@ public class Extractor {
       }
       return !Character.valueOf('/').equals(chars.get(j + 1)) ? j : i + 1;
     });
+  }
+
+  private boolean areLastTwoTagClosingChars(final int index, final List<Character> chars) {
+    return !(Identifier.isTagClosingChar(chars.get(index)) && !Identifier.isTagClosingChar(chars.get(index - 1)));
   }
 
   private CompletableFuture<Integer> findFirstValidHtmlTagCharIndex(final List<Character> chars) {
