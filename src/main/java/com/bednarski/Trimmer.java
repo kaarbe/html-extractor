@@ -6,6 +6,8 @@ import java.util.concurrent.CompletableFuture;
 
 public class Trimmer {
 
+  private Trimmer() { }
+
   /**
    * Returns new list of {@link Character} objects without excessive characters. It removes all characters from
    * the beginning until the opening HTML mark is found and all characters from the ending until the closing HTML tag

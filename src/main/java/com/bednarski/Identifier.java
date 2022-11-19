@@ -2,6 +2,8 @@ package com.bednarski;
 
 public class Identifier {
 
+  private Identifier() { }
+
   /**
    * Checks if a character is equal to '<' which can indicate that it's the beginning of an HTML tag.
    *

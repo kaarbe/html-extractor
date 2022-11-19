@@ -8,6 +8,8 @@ public class Extractor {
 
   private static final String EMPTY_STRING = "";
 
+  private Extractor() { }
+
   public static String extract(final String input, final boolean shouldTrim) {
     if (!Validator.isValid(input)) {
       return EMPTY_STRING;

@@ -5,6 +5,8 @@ import java.util.stream.Collectors;
 
 public class Validator {
 
+  private Validator() { }
+
   /**
    * Returns a boolean value indicating if given text input is considered valid. An input is valid if it contains all
    * characters required to construct an HTML tag ('<', '>', '/') and has at least 8 characters in general and number
