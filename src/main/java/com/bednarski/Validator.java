@@ -20,7 +20,7 @@ public class Validator {
     }
     Set<Character> uniqueChars = input
         .chars()
-        .mapToObj(c -> (char) c)
+        .mapToObj(charValue -> (char) charValue)
         .collect(Collectors.toSet());
     return uniqueChars.size() > 3
         && uniqueChars.contains('<')

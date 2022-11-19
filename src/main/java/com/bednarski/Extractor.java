@@ -1,7 +1,7 @@
 package com.bednarski;
 
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class Extractor {
@@ -12,7 +12,7 @@ public class Extractor {
     if (!Validator.isValid(input)) {
       return EMPTY_STRING;
     }
-    List<Character> chars = shouldTrim ? trim(toCharList(input)) : toCharList(input);
+    List<Character> chars = shouldTrim ? Trimmer.trim(toCharList(input)) : toCharList(input);
 
     int index = 0;
     while (mayContainHtmlTag(chars) && index < chars.size()) {
@@ -24,7 +24,6 @@ public class Extractor {
 
       while (!(firstTag.isOpening() && secondTag.isClosing())) {
         firstTag = secondTag;
-
         secondTag = HtmlTag.findOne(index, chars);
         index = secondTag.getEndIndex();
       }
@@ -45,69 +44,6 @@ public class Extractor {
         .chars()
         .mapToObj(codePointValue -> (char) codePointValue)
         .collect(Collectors.toList());
-  }
-
-  private List<Character> trim(final List<Character> chars) {
-    CompletableFuture<Integer> lastValidCharIndex = findLastValidHtmlTagCharIndex(chars);
-    CompletableFuture<Integer> firstValidCharIndex = findFirstValidHtmlTagCharIndex(chars);
-    CompletableFuture.allOf(lastValidCharIndex, firstValidCharIndex).join();
-
-    List<Character> trimmedCharList = new ArrayList<>(chars);
-    Integer endIndex = lastValidCharIndex.join();
-    if (endIndex != -1) {
-      trimmedCharList
-          .subList(endIndex, chars.size())
-          .clear();
-    }
-    Integer startIndex = firstValidCharIndex.join();
-    if (startIndex != -1) {
-      trimmedCharList
-          .subList(0, startIndex)
-          .clear();
-    }
-    return trimmedCharList;
-  }
-
-  private CompletableFuture<Integer> findLastValidHtmlTagCharIndex(final List<Character> chars) {
-    return CompletableFuture.supplyAsync(() -> {
-      if (Identifier.isTagClosingChar(chars.get(chars.size() - 1))
-          && !Identifier.isTagClosingChar(chars.get(chars.size() - 2))) {
-        return -1;
-      }
-      int i = chars.size() - 1;
-      while (i >= 0 && areLastTwoTagClosingChars(i, chars)) {
-        i--;
-      }
-      int j = i;
-      while (j >= 0 && !Identifier.isTagOpeningChar(chars.get(j))) {
-        j--;
-      }
-      return !Character.valueOf('/').equals(chars.get(j + 1)) ? j : i + 1;
-    });
-  }
-
-  private boolean areLastTwoTagClosingChars(final int index, final List<Character> chars) {
-    return !(Identifier.isTagClosingChar(chars.get(index)) && !Identifier.isTagClosingChar(chars.get(index - 1)));
-  }
-
-  private CompletableFuture<Integer> findFirstValidHtmlTagCharIndex(final List<Character> chars) {
-    return CompletableFuture.supplyAsync(() -> {
-      if (Identifier.isTagOpeningChar(chars.get(0))) {
-        return -1;
-      }
-      int i = 0;
-      int j = 0;
-      while (i < chars.size() && !Identifier.isTagOpeningChar(chars.get(i))) {
-        i++;
-        if (Character.valueOf('/').equals(chars.get(i + 1))) {
-          j = i + 1;
-          while (!Identifier.isTagClosingChar(chars.get(j))) {
-            j++;
-          }
-        }
-      }
-      return Math.max(i, ++j);
-    });
   }
 
   private boolean mayContainHtmlTag(final List<Character> chars) {
