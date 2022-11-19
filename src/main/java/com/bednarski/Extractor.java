@@ -8,7 +8,7 @@ public class Extractor {
 
   private static final String EMPTY_STRING = "";
 
-  public String extractPlainText(final String input, final boolean shouldTrim) {
+  public static String extract(final String input, final boolean shouldTrim) {
     if (!Validator.isValid(input)) {
       return EMPTY_STRING;
     }
@@ -32,26 +32,26 @@ public class Extractor {
           ? getWithoutTags(chars, firstTag, secondTag)
           : getWithoutTagsAndContent(chars, firstTag, secondTag);
     }
-
     return getWithoutRemainingTags(chars)
         .stream()
         .map(Object::toString)
         .collect(Collectors.joining(EMPTY_STRING));
   }
 
-  private List<Character> toCharList(final String text) {
+  private static List<Character> toCharList(final String text) {
     return text
         .chars()
         .mapToObj(codePointValue -> (char) codePointValue)
         .collect(Collectors.toList());
   }
 
-  private boolean mayContainHtmlTag(final List<Character> chars) {
+  private static boolean mayContainHtmlTag(final List<Character> chars) {
     return chars.contains('<')
         && chars.contains('>');
   }
 
-  private List<Character> getWithoutTags(final List<Character> chars, final HtmlTag opening, final HtmlTag closing) {
+  private static List<Character> getWithoutTags(
+      final List<Character> chars, final HtmlTag opening, final HtmlTag closing) {
     List<Character> beforeOpeningTag = chars.subList(0, opening.getStartIndex());
     List<Character> inBetweenTags = chars.subList(opening.getEndIndex() + 1, closing.getStartIndex());
     List<Character> afterClosingTag = chars.subList(closing.getEndIndex() + 1, chars.size());
@@ -63,7 +63,7 @@ public class Extractor {
     return remainingTags;
   }
 
-  private List<Character> getWithoutTagsAndContent(
+  private static List<Character> getWithoutTagsAndContent(
       final List<Character> chars, final HtmlTag firstTag, final HtmlTag secondTag) {
     List<Character> remainingChars = new ArrayList<>(chars);
     remainingChars
@@ -72,7 +72,7 @@ public class Extractor {
     return remainingChars;
   }
 
-  private List<Character> getWithoutRemainingTags(final List<Character> chars) {
+  private static List<Character> getWithoutRemainingTags(final List<Character> chars) {
     if (!mayContainHtmlTag(chars)) {
       return chars;
     }

@@ -6,18 +6,14 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ExtendWith(MockitoExtension.class)
 class ExtractorTest {
-
-  @InjectMocks
-  Extractor extractor;
 
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
@@ -31,7 +27,7 @@ class ExtractorTest {
     var expectedWithTrimming = "DogCat";
 
     // when
-    String result = extractor.extractPlainText(htmlInput, shouldTrim);
+    String result = Extractor.extract(htmlInput, shouldTrim);
 
     // then
     assertEquals(shouldTrim ? expectedWithTrimming : expected, result);
@@ -50,7 +46,7 @@ class ExtractorTest {
     var correctlyExtractedText = "DogAnotherDogCat";
 
     // when
-    String result = extractor.extractPlainText(htmlInput, true);
+    String result = Extractor.extract(htmlInput, true);
 
     // then
     assertEquals(correctlyExtractedText, result);
@@ -59,7 +55,7 @@ class ExtractorTest {
   @ParameterizedTest
   @MethodSource("getHtmlSamples")
   void shouldTrimAndExtract(String htmlInput, String expectedOutput) {
-    String result = extractor.extractPlainText(htmlInput, true);
+    String result = Extractor.extract(htmlInput, true);
     assertEquals(expectedOutput, result);
   }
 

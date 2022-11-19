@@ -6,8 +6,7 @@ public class HtmlExtractor {
 
     public static void main(String[] args) {
         String input = readInput();
-        var extractor = new Extractor();
-        String result = extractor.extractPlainText(input, true);
+        String result = Extractor.extract(input, true);
         System.out.println(result);
     }
 
