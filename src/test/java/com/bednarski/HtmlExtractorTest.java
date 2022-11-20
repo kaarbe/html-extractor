@@ -13,7 +13,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ExtendWith(MockitoExtension.class)
-class ExtractorTest {
+class HtmlExtractorTest {
 
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
@@ -27,7 +27,7 @@ class ExtractorTest {
     var expectedWithTrimming = "DogCat";
 
     // when
-    String result = Extractor.extract(htmlInput, shouldTrim);
+    String result = HtmlExtractor.extract(htmlInput, shouldTrim);
 
     // then
     assertEquals(shouldTrim ? expectedWithTrimming : expected, result);
@@ -46,7 +46,7 @@ class ExtractorTest {
     var correctlyExtractedText = "DogAnotherDogCat";
 
     // when
-    String result = Extractor.extract(htmlInput, true);
+    String result = HtmlExtractor.extract(htmlInput, true);
 
     // then
     assertEquals(correctlyExtractedText, result);
@@ -55,7 +55,7 @@ class ExtractorTest {
   @ParameterizedTest
   @MethodSource("getHtmlSamples")
   void shouldTrimAndExtract(String htmlInput, String expectedOutput) {
-    String result = Extractor.extract(htmlInput, true);
+    String result = HtmlExtractor.extract(htmlInput, true);
     assertEquals(expectedOutput, result);
   }
 

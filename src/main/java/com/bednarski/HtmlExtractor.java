@@ -4,12 +4,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class Extractor {
+public class HtmlExtractor {
 
   private static final String EMPTY_STRING = "";
 
-  private Extractor() { }
+  private HtmlExtractor() { }
 
+  /**
+   * Extracts text from an input with HTML tags. Only text contained within valid HTML tags will be returned. Invalid
+   * tags, text between them and text without any HTML will be removed before creating final result.
+   *
+   * @param input a text containing HTML tags than need to be removed.
+   * @param shouldTrim a boolean value determining whether characters before first valid HTML tag and after last valid
+   *                   HTML tag should be removed.
+   * @return resulting text extracted from the input param.
+   */
   public static String extract(final String input, final boolean shouldTrim) {
     if (!Validator.isValid(input)) {
       return EMPTY_STRING;
