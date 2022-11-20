@@ -1,4 +1,4 @@
-package com.bednarski;
+package com.github.kaarbe;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

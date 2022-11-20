@@ -1,4 +1,4 @@
-package com.bednarski;
+package com.github.kaarbe;
 
 import java.util.List;
 
