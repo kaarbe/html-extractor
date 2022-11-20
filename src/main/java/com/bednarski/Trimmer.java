@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-public class Trimmer {
+class Trimmer {
 
   private Trimmer() { }
 
@@ -16,7 +16,7 @@ public class Trimmer {
    * @param chars a list of {@link Character} objects to trim.
    * @return a list without excessive characters.
    */
-  public static List<Character> trim(final List<Character> chars) {
+  static List<Character> trim(final List<Character> chars) {
     CompletableFuture<Integer> lastValidCharIndex = findLastValidHtmlTagCharIndex(chars);
     CompletableFuture<Integer> firstValidCharIndex = findFirstValidHtmlTagCharIndex(chars);
     CompletableFuture.allOf(lastValidCharIndex, firstValidCharIndex).join();

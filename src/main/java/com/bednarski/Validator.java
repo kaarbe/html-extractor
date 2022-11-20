@@ -3,7 +3,7 @@ package com.bednarski;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class Validator {
+class Validator {
 
   private Validator() { }
 
@@ -16,7 +16,7 @@ public class Validator {
    * @param input a text to validate.
    * @return true if given input is considered valid or false if otherwise.
    */
-  public static boolean isValid(final String input) {
+  static boolean isValid(final String input) {
     if (input.length() < 8) {
       return false;
     }

@@ -2,7 +2,7 @@ package com.bednarski;
 
 import java.util.List;
 
-public class HtmlTag {
+class HtmlTag {
 
   private final StringBuilder content;
   private final int startIndex;
@@ -13,7 +13,7 @@ public class HtmlTag {
     this.content = new StringBuilder();
   }
 
-  public static HtmlTag findOne(final int startIndex, final List<Character> chars) {
+  static HtmlTag findOne(final int startIndex, final List<Character> chars) {
     int currentIndex = findTagOpeningChar(startIndex, chars);
     HtmlTag tag = HtmlTag.withStartIndex(currentIndex);
     while (!Identifier.isTagClosingChar(chars.get(currentIndex)) && currentIndex < chars.size()) {
@@ -36,24 +36,24 @@ public class HtmlTag {
     return new HtmlTag(startIndex);
   }
 
-  public void append(final char c) {
+  void append(final char c) {
     this.content.append(c);
   }
 
-  public boolean isOpening() {
+  boolean isOpening() {
     final String content = this.content.toString();
     return !content.startsWith("</")
         && content.startsWith("<")
         && content.endsWith(">");
   }
 
-  public boolean isClosing() {
+  boolean isClosing() {
     final String content = this.content.toString();
     return content.startsWith("</")
         && content.endsWith(">");
   }
 
-  public boolean isPairWith(final HtmlTag other) {
+  boolean isPairWith(final HtmlTag other) {
     if (!(this.isOpening() && other.isClosing())) {
       return false;
     }
@@ -71,15 +71,15 @@ public class HtmlTag {
     return content.equals(otherContent);
   }
 
-  public int getStartIndex() {
+  int getStartIndex() {
     return startIndex;
   }
 
-  public int getEndIndex() {
+  int getEndIndex() {
     return endIndex;
   }
 
-  public void setEndIndex(final int endIndex) {
+  void setEndIndex(final int endIndex) {
     this.endIndex = endIndex;
   }
 }

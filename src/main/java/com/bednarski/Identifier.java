@@ -1,6 +1,6 @@
 package com.bednarski;
 
-public class Identifier {
+ class Identifier {
 
   private Identifier() { }
 
@@ -10,7 +10,7 @@ public class Identifier {
    * @param c a character to check.
    * @return true if the character is the HTML opening character, false otherwise.
    */
-  public static boolean isTagOpeningChar(final char c) {
+  static boolean isTagOpeningChar(final char c) {
     return Character.valueOf('<').equals(c);
   }
 
@@ -20,7 +20,7 @@ public class Identifier {
    * @param c a character to check.
    * @return true if the character is the HTML tag closing character, false otherwise.
    */
-  public static boolean isTagClosingChar(final char c) {
+  static boolean isTagClosingChar(final char c) {
     return Character.valueOf('>').equals(c);
   }
 }
