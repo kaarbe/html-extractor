@@ -22,18 +22,20 @@ class Trimmer {
     CompletableFuture.allOf(lastValidCharIndex, firstValidCharIndex).join();
 
     List<Character> trimmedCharList = new ArrayList<>(chars);
-    Integer endIndex = lastValidCharIndex.join();
-    if (endIndex != -1) {
-      trimmedCharList
-          .subList(endIndex, chars.size())
-          .clear();
-    }
-    Integer startIndex = firstValidCharIndex.join();
-    if (startIndex != -1) {
-      trimmedCharList
-          .subList(0, startIndex)
-          .clear();
-    }
+    lastValidCharIndex.thenAccept(endIndex -> {
+      if (endIndex != -1) {
+        trimmedCharList
+            .subList(endIndex, chars.size())
+            .clear();
+      }
+    }).join();
+    firstValidCharIndex.thenAccept(startIndex -> {
+      if (startIndex != -1) {
+        trimmedCharList
+            .subList(0, startIndex)
+            .clear();
+      }
+    }).join();
     return trimmedCharList;
   }
 

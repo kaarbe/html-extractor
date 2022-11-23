@@ -19,9 +19,9 @@ class HtmlTag {
     while (!Identifier.isTagClosingChar(chars.get(currentIndex)) && currentIndex < chars.size()) {
       tag.append(chars.get(currentIndex++));
     }
-    tag.append(chars.get(currentIndex));
-    tag.setEndIndex(currentIndex);
-    return tag;
+    return tag
+        .append(chars.get(currentIndex))
+        .setEndIndex(currentIndex);
   }
 
   private static int findTagOpeningChar(final int startIndex, final List<Character> chars) {
@@ -36,8 +36,9 @@ class HtmlTag {
     return new HtmlTag(startIndex);
   }
 
-  void append(final char c) {
+  HtmlTag append(final char c) {
     this.content.append(c);
+    return this;
   }
 
   boolean isOpening() {
@@ -79,7 +80,8 @@ class HtmlTag {
     return endIndex;
   }
 
-  void setEndIndex(final int endIndex) {
+  HtmlTag setEndIndex(final int endIndex) {
     this.endIndex = endIndex;
+    return this;
   }
 }
