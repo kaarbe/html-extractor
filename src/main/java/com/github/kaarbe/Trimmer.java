@@ -6,7 +6,8 @@ import java.util.concurrent.CompletableFuture;
 
 class Trimmer {
 
-  private Trimmer() { }
+  private Trimmer() {
+  }
 
   /**
    * Returns new list of {@link Character} objects without excessive characters. It removes all characters from
@@ -17,57 +18,55 @@ class Trimmer {
    * @return a list without excessive characters.
    */
   static List<Character> trim(final List<Character> chars) {
-    CompletableFuture<Integer> lastValidCharIndex = findLastValidHtmlTagCharIndex(chars);
-    CompletableFuture<Integer> firstValidCharIndex = findFirstValidHtmlTagCharIndex(chars);
-    CompletableFuture.allOf(lastValidCharIndex, firstValidCharIndex).join();
+    CompletableFuture<Integer> getLastValidIndexTask = CompletableFuture.supplyAsync(() ->
+        findLastValidHtmlTagCharIndex(chars));
+    CompletableFuture<Integer> getFirstValidIndexTask = CompletableFuture.supplyAsync(() ->
+        findFirstValidHtmlTagCharIndex(chars));
+    CompletableFuture.allOf(getLastValidIndexTask, getFirstValidIndexTask).join();
 
     List<Character> charsCopy = new ArrayList<>(chars);
-    lastValidCharIndex.thenAccept(endIndex -> trimTail(charsCopy, endIndex)).join();
-    firstValidCharIndex.thenAccept(startIndex -> trimHead(charsCopy, startIndex)).join();
+    getLastValidIndexTask.thenAccept(lastValidIndex -> trimTail(charsCopy, lastValidIndex)).join();
+    getFirstValidIndexTask.thenAccept(firstValidIndex -> trimHead(charsCopy, firstValidIndex)).join();
     return charsCopy;
   }
 
-  private static CompletableFuture<Integer> findLastValidHtmlTagCharIndex(final List<Character> chars) {
-    return CompletableFuture.supplyAsync(() -> {
-      if (chars.isEmpty()
-          || (Identifier.isTagClosingChar(chars.get(chars.size() - 1))
-            && !Identifier.isTagClosingChar(chars.get(chars.size() - 2)))) {
-        return -1;
-      }
-      int i = chars.size() - 1;
-      while (i >= 0 && areLastTwoTagClosingChars(i, chars)) {
-        i--;
-      }
-      int j = i;
-      while (j >= 0 && !Identifier.isTagOpeningChar(chars.get(j))) {
-        j--;
-      }
-      return !Character.valueOf('/').equals(chars.get(j + 1)) ? j : i + 1;
-    });
+  private static Integer findLastValidHtmlTagCharIndex(final List<Character> chars) {
+    if (chars.isEmpty()
+        || (Identifier.isTagClosingChar(chars.get(chars.size() - 1))
+        && !Identifier.isTagClosingChar(chars.get(chars.size() - 2)))) {
+      return -1;
+    }
+    int i = chars.size() - 1;
+    while (i >= 0 && areLastTwoTagClosingChars(i, chars)) {
+      i--;
+    }
+    int j = i;
+    while (j >= 0 && !Identifier.isTagOpeningChar(chars.get(j))) {
+      j--;
+    }
+    return !Character.valueOf('/').equals(chars.get(j + 1)) ? j : i + 1;
   }
 
   private static boolean areLastTwoTagClosingChars(final int index, final List<Character> chars) {
     return !(Identifier.isTagClosingChar(chars.get(index)) && !Identifier.isTagClosingChar(chars.get(index - 1)));
   }
 
-  private static CompletableFuture<Integer> findFirstValidHtmlTagCharIndex(final List<Character> chars) {
-    return CompletableFuture.supplyAsync(() -> {
-      if (chars.isEmpty() || Identifier.isTagOpeningChar(chars.get(0))) {
-        return -1;
-      }
-      int i = 0;
-      int j = 0;
-      while (i < chars.size() && !Identifier.isTagOpeningChar(chars.get(i))) {
-        i++;
-        if (i + 1 < chars.size() && Character.valueOf('/').equals(chars.get(i + 1))) {
-          j = i + 1;
-          while (!Identifier.isTagClosingChar(chars.get(j))) {
-            j++;
-          }
+  private static Integer findFirstValidHtmlTagCharIndex(final List<Character> chars) {
+    if (chars.isEmpty() || Identifier.isTagOpeningChar(chars.get(0))) {
+      return -1;
+    }
+    int i = 0;
+    int j = 0;
+    while (i < chars.size() && !Identifier.isTagOpeningChar(chars.get(i))) {
+      i++;
+      if (i + 1 < chars.size() && Character.valueOf('/').equals(chars.get(i + 1))) {
+        j = i + 1;
+        while (!Identifier.isTagClosingChar(chars.get(j))) {
+          j++;
         }
       }
-      return Math.max(i, ++j);
-    });
+    }
+    return Math.max(i, ++j);
   }
 
   private static void trimTail(final List<Character> chars, final int endIndex) {
