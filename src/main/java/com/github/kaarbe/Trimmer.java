@@ -21,22 +21,10 @@ class Trimmer {
     CompletableFuture<Integer> firstValidCharIndex = findFirstValidHtmlTagCharIndex(chars);
     CompletableFuture.allOf(lastValidCharIndex, firstValidCharIndex).join();
 
-    List<Character> trimmedCharList = new ArrayList<>(chars);
-    lastValidCharIndex.thenAccept(endIndex -> {
-      if (endIndex != -1) {
-        trimmedCharList
-            .subList(endIndex, chars.size())
-            .clear();
-      }
-    }).join();
-    firstValidCharIndex.thenAccept(startIndex -> {
-      if (startIndex != -1) {
-        trimmedCharList
-            .subList(0, startIndex)
-            .clear();
-      }
-    }).join();
-    return trimmedCharList;
+    List<Character> charsCopy = new ArrayList<>(chars);
+    lastValidCharIndex.thenAccept(endIndex -> trimTail(charsCopy, endIndex)).join();
+    firstValidCharIndex.thenAccept(startIndex -> trimHead(charsCopy, startIndex)).join();
+    return charsCopy;
   }
 
   private static CompletableFuture<Integer> findLastValidHtmlTagCharIndex(final List<Character> chars) {
@@ -80,5 +68,21 @@ class Trimmer {
       }
       return Math.max(i, ++j);
     });
+  }
+
+  private static void trimTail(List<Character> trimmedCharList, int endIndex) {
+    if (endIndex != -1) {
+      trimmedCharList
+          .subList(endIndex, trimmedCharList.size())
+          .clear();
+    }
+  }
+
+  private static void trimHead(List<Character> trimmedCharList, int startIndex) {
+    if (startIndex != -1) {
+      trimmedCharList
+          .subList(0, startIndex)
+          .clear();
+    }
   }
 }
