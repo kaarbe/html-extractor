@@ -70,17 +70,17 @@ class Trimmer {
     });
   }
 
-  private static void trimTail(List<Character> trimmedCharList, int endIndex) {
+  private static void trimTail(final List<Character> chars, final int endIndex) {
     if (endIndex != -1) {
-      trimmedCharList
-          .subList(endIndex, trimmedCharList.size())
+      chars
+          .subList(endIndex, chars.size())
           .clear();
     }
   }
 
-  private static void trimHead(List<Character> trimmedCharList, int startIndex) {
+  private static void trimHead(final List<Character> chars, final int startIndex) {
     if (startIndex != -1) {
-      trimmedCharList
+      chars
           .subList(0, startIndex)
           .clear();
     }
