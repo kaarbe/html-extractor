@@ -46,7 +46,7 @@ public class HtmlExtractor {
           : getWithoutTagsAndContent(chars, firstTag, secondTag);
     }
     return getWithoutRemainingTags(chars)
-        .parallelStream()
+        .stream()
         .map(Objects::toString)
         .collect(Collectors.joining(EMPTY_STRING));
   }
@@ -54,7 +54,6 @@ public class HtmlExtractor {
   private static List<Character> toCharList(final String text) {
     return text
         .chars()
-        .parallel()
         .mapToObj(codePointValue -> (char) codePointValue)
         .collect(Collectors.toList());
   }
