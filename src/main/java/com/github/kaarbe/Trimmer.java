@@ -22,11 +22,12 @@ class Trimmer {
         findLastValidHtmlTagCharIndex(chars));
     CompletableFuture<Integer> getFirstValidIndexTask = CompletableFuture.supplyAsync(() ->
         findFirstValidHtmlTagCharIndex(chars));
-    CompletableFuture.allOf(getLastValidIndexTask, getFirstValidIndexTask).join();
 
     List<Character> charsCopy = new ArrayList<>(chars);
-    getLastValidIndexTask.thenAccept(lastValidIndex -> trimTail(charsCopy, lastValidIndex)).join();
-    getFirstValidIndexTask.thenAccept(firstValidIndex -> trimHead(charsCopy, firstValidIndex)).join();
+    CompletableFuture.allOf(getLastValidIndexTask, getFirstValidIndexTask).join();
+
+    getLastValidIndexTask.thenAcceptAsync(lastValidIndex -> trimTail(charsCopy, lastValidIndex)).join();
+    getFirstValidIndexTask.thenAcceptAsync(firstValidIndex -> trimHead(charsCopy, firstValidIndex)).join();
     return charsCopy;
   }
 

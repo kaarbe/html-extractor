@@ -2,19 +2,21 @@ package com.github.kaarbe;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class HtmlExtractor {
 
   private static final String EMPTY_STRING = "";
 
-  private HtmlExtractor() { }
+  private HtmlExtractor() {
+  }
 
   /**
    * Extracts text from an input with HTML tags. Only text contained within valid HTML tags will be returned. Invalid
    * tags, text between them and text without any HTML will be removed before creating final result.
    *
-   * @param input a text containing HTML tags than need to be removed.
+   * @param input      a text containing HTML tags than need to be removed.
    * @param shouldTrim a boolean value determining whether characters before first valid HTML tag and after last valid
    *                   HTML tag should be removed.
    * @return resulting text extracted from the input param.
@@ -44,14 +46,15 @@ public class HtmlExtractor {
           : getWithoutTagsAndContent(chars, firstTag, secondTag);
     }
     return getWithoutRemainingTags(chars)
-        .stream()
-        .map(Object::toString)
+        .parallelStream()
+        .map(Objects::toString)
         .collect(Collectors.joining(EMPTY_STRING));
   }
 
   private static List<Character> toCharList(final String text) {
     return text
         .chars()
+        .parallel()
         .mapToObj(codePointValue -> (char) codePointValue)
         .collect(Collectors.toList());
   }
