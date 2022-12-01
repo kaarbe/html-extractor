@@ -18,16 +18,17 @@ class Trimmer {
    * @return a list without excessive characters.
    */
   static List<Character> trim(final List<Character> chars) {
+    CompletableFuture<List<Character>> getCharsCopy = CompletableFuture.supplyAsync(() -> new ArrayList<>(chars));
     CompletableFuture<Integer> getLastValidIndexTask = CompletableFuture.supplyAsync(() ->
         findLastValidHtmlTagCharIndex(chars));
     CompletableFuture<Integer> getFirstValidIndexTask = CompletableFuture.supplyAsync(() ->
         findFirstValidHtmlTagCharIndex(chars));
 
-    List<Character> charsCopy = new ArrayList<>(chars);
-    CompletableFuture.allOf(getLastValidIndexTask, getFirstValidIndexTask).join();
+    CompletableFuture.allOf(getCharsCopy, getLastValidIndexTask, getFirstValidIndexTask).join();
 
-    getLastValidIndexTask.thenAcceptAsync(lastValidIndex -> trimTail(charsCopy, lastValidIndex)).join();
-    getFirstValidIndexTask.thenAcceptAsync(firstValidIndex -> trimHead(charsCopy, firstValidIndex)).join();
+    List<Character> charsCopy = getCharsCopy.join();
+    getLastValidIndexTask.thenAccept(lastValidIndex -> trimTail(charsCopy, lastValidIndex)).join();
+    getFirstValidIndexTask.thenAccept(firstValidIndex -> trimHead(charsCopy, firstValidIndex)).join();
     return charsCopy;
   }
 
